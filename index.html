@@ -1,0 +1,1486 @@
+<!--
+    ------------------------------------------------------------
+    © 2025 [Dariusz Tyszko]. Wszelkie prawa zastrzeżone.
+
+    Niniejszy plik HTML jest udostępniany na licencji MIT.
+
+    Zezwala się na dowolne użycie, kopiowanie, modyfikowanie i 
+    rozpowszechnianie tego pliku, także w projektach komercyjnych,
+    pod warunkiem zachowania powyższej informacji o prawach autorskich 
+    i licencji.
+
+    Pełny tekst licencji MIT dostępny jest tutaj:
+    https://opensource.org/licenses/MIT
+
+    Autor: [Dariusz Tyszko / darek.tyszko@icloud.com]
+    Data: [20.11.2025]
+
+    ------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprawozdanie</title>
+  <style>
+  :root {
+      --blue: #2563eb;
+      --green: #16a34a;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --blue-light: #eff6ff;
+      --gray-bg: #fafafa;
+      --gray-border: #e5e7eb;
+      --text: #111;
+      --card-bg: #fff;
+      --transition: 0.25s ease;
+    }
+    
+    .menu { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .menu button { flex: 1; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+    .menu button.active { background: var(--blue); color: #fff; }
+    .menu button:not(.active) { background: #f3f4f6; color: #111; }
+    /* ANIMACJA PRZEJŚCIA MIĘDZY SEKCJAMI */
+    .page {
+      display: none;
+      opacity: 0;
+      transform: translateX(30px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    
+    .page.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--gray-bg);
+      color: var(--text);
+      transition: background var(--transition), color var(--transition);
+    }
+    
+    .container { max-width: 520px; margin: 0 auto; }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 10px;
+  	backdrop-filter: blur(8px);
+  
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      margin-bottom: 12px;
+      transition: background var(--transition);
+    }
+    
+    label { display: block; font-size: 0.85rem; margin-bottom: 4px; font-weight: 500; }
+    
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--gray-border);
+      background: var(--card-bg);
+      color: var(--text);
+      margin-bottom: 8px;
+      font-size: 1rem;
+      transition: all var(--transition);
+    }
+    
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+    
+    button:active { transform: translateY(1px); }
+    
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { filter: brightness(0.95); }
+    .btn-secondary { background: #f3f4f6; color: #333; }
+    .btn-danger { background: #fee2e2; color: #b91c1c; }
+    .btn-ghost { background: transparent; color: var(--text); }
+    .small { font-size: 0.8rem; opacity: 0.8; }
+    
+    .gmina-title {
+      background: var(--blue-light);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    
+    .gmina-title .left { display: flex; align-items: center; gap: 8px; }
+    .gmina-arrow { display: inline-block; transition: transform 0.28s, opacity 0.2s; opacity: 0.85; font-size: 14px; }
+    .gmina-title.open .gmina-arrow { transform: rotate(90deg); }
+    
+    .gmina-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s, opacity 0.25s;
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .gmina-content.open { max-height: 50vh; opacity: 1; overflow-y: auto; scrollbar-width: thin; }
+    .gmina-content::-webkit-scrollbar { width: 8px; }
+    .gmina-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+    .gmina-content::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+    .gmina-content::-webkit-scrollbar-thumb:hover { background: #1e40af; }
+    
+    .person {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--gray-border);
+      font-size: 0.9rem;
+      gap: 8px;
+    }
+    .person:last-child { border-bottom: none; }
+    .person .left { flex: 1; min-width: 0; }
+    .person .left strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .person .left .meta { font-size: 0.8rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .person .actions { display: flex; gap: 6px; flex-shrink: 0; }
+    
+    :focus { outline: none; }
+    :focus-visible { outline: 3px solid rgba(37,99,235,0.15); outline-offset: 3px; border-radius: 8px; }
+    
+    label.checkbox { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; cursor: pointer; }
+    
+    input[type="checkbox"] { appearance: none; width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 6px; cursor: pointer; position: relative; }
+    input[type="checkbox"]:checked { background: #2563eb; border-color: #2563eb; }
+    input[type="checkbox"]:checked::after {
+      content: ""; position: absolute; left: 6px; top: 2px; width: 6px; height: 12px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+    }
+    
+    #toasts {
+      position: fixed;
+      top: 10px; /* nad panelem */
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 9999;
+      width: 100%;
+      max-width: 520px; /* szerokość kontenera */
+      pointer-events: none; /* kliknięcia przechodzą przez pustą przestrzeń */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    
+    .toast {
+      pointer-events: auto; /* kliknięcia działają tylko na toast */
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+      position: relative;
+      overflow: hidden;
+      transform: translateY(-100%); /* start nad panelem */
+      animation: toastIn 0.4s forwards;
+    }
+    
+    .toast.success { background: linear-gradient(135deg, #4ade80, #22c55e); }
+    .toast.warning { background: linear-gradient(135deg, #facc15, #eab308); color: #111; }
+    .toast.error { background: linear-gradient(135deg, #f87171, #ef4444); }
+    
+    .toast .icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background-color: rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    .toast .body {
+      flex: 1;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    
+    .toast .close {
+      margin-left: auto;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .toast .close:hover {
+      background: rgba(255,255,255,0.4);
+      transform: scale(1.1);
+    }
+    
+    /* Animacje wchodzenia / wychodzenia z góry */
+    @keyframes toastIn {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes toastOut {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(-100%); opacity: 0; }
+    }
+    
+    .toast.hide {
+      animation: toastOut 0.35s forwards;
+    }
+    
+    /* Pasek postępu */
+    .toast::before {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      width: 100%;
+      background-color: rgba(255,255,255,0.5);
+      animation: progressBar 4s linear forwards;
+    }
+    
+    @keyframes progressBar {
+      from { width: 100%; }
+      to { width: 0; }
+    }
+    
+    /* Responsywność */
+    @media (max-width: 600px) {
+      #toasts { max-width: calc(100% - 20px); top: 8px; }
+      .toast { padding: 10px 12px; font-size: 13px; border-radius: 10px; }
+      .toast .close { width: 22px; height: 22px; }
+      .toast .icon { width: 28px; height: 28px; }
+    }
+    
+    .address-list-container {
+      max-height: 400px;  /* zwiększona wysokość listy */
+      overflow-y: auto;   /* włącz scrolla */
+      padding: 6px;
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    /* Scrollbar w tym samym stylu co w rejestrze */
+    .address-list-container::-webkit-scrollbar { width: 8px; }
+    .address-list-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+    .address-list-container::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+    .address-list-container::-webkit-scrollbar-thumb:hover { background: #1e40af; }
+    
+  .address-item {
+    display: grid;
+    grid-template-columns: 1fr 80px auto auto;
+    align-items: center;
+    gap: 10px;
+  
+    padding: 8px 10px;
+    border: 1px solid var(--gray-border);
+    border-radius: 8px;
+  
+    background: #fff;
+    box-sizing: border-box;
+    min-height: 48px;
+  }
+  
+  .address-item input {
+    width: 80px;
+    height: 32px;
+    text-align: right;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--gray-border);
+    box-sizing: border-box;
+  }
+  
+  .address-item button {
+    height: 32px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+    .address-item input:focus {
+      border-color: var(--blue);
+      outline: none;
+    }
+    
+  .details-panel {
+    background: #f9f9f9;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.95rem;
+  }
+  .details-panel div {
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+  }
+  .details-panel div:last-child {
+    border-bottom: none;
+  }
+  
+    
+    /* SEARCH */
+    .search-box { margin-bottom: 12px; }
+    mark { background: #fde68a; padding: 0 2px; border-radius: 3px; }
+    
+    /* PRINT */
+    @media print {
+      .search-box, #printBtn, .toasts, button, input, select, #addForm, #importBackup, #clearAll, #cancelEdit, #resetForm, .actions { display: none !important; }
+      body { background: white; }
+      .card { box-shadow: none; border: 1px solid #ccc; }
+      .gmina-content { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
+      * { animation: none !important; transition: none !important; }
+    }
+  .history-content {
+    max-height: 50vh;           /* ograniczenie wysokości kontenera */
+    overflow-y: auto;           /* scroll pionowy */
+    overflow-x: auto;           /* scroll poziomy, gdy tekst jest za długi */
+    white-space: nowrap;        /* nie zawijaj tekstu */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 4px;
+    transition: max-height 0.35s, opacity 0.25s;
+    opacity: 1;
+  }
+  
+  .history-content .person {
+    display: inline-block;      /* pozwala na przewijanie poziome */
+    min-width: max-content;     /* szerokość dopasowana do zawartości */
+    white-space: nowrap;        /* tekst w jednej linii */
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .history-content .person:last-child {
+    border-bottom: none;
+  }
+  
+  .history-content mark {
+    background: #fde68a;
+    padding: 0 2px;
+    border-radius: 3px;
+  }
+  
+  /* Scrollbar – ten sam styl co w gmina-content */
+  .history-content::-webkit-scrollbar { width: 8px; }
+  .history-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+  .history-content::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+  .history-content::-webkit-scrollbar-thumb:hover { background: #1e40af; }
+  
+  /* Firefox */
+  .history-content { scrollbar-width: thin; scrollbar-color: #2563eb #f1f1f1; }
+  
+  
+  .address-item.m3-zero {
+    background: #fee2e2;
+    border-color: #ef4444;
+  }
+  
+  #loadingScreen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    transition: opacity 0.3s ease;
+  }
+  
+  #loadingScreen.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #2563eb;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 12px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .loadingText {
+    font-size: 1.1rem;
+    color: #111;
+    font-weight: 500;
+  }
+  
+  
+  /* Firefox */
+  .history-content { scrollbar-width: thin; scrollbar-color: #2563eb #f1f1f1; }
+  </style>
+</head>
+
+<body>
+  <div id="loadingScreen">
+    <div class="spinner">
+    </div>
+    <div class="loadingText">Ładowanie danych...</div>
+  </div>
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="true">
+  </div>
+  <div class="container">
+    <!-- MENU -->
+    <div class="menu">
+      <button class="menuBtn" data-page="rejestr">Sprawozdanie</button>
+      <button class="menuBtn" data-page="dodatkowe">Ilość</button>
+      <button class="menuBtn" data-page="historia">Historia zmian</button>
+    </div>
+    <!-- PODSTRONA 1: REJESTR OSÓB -->
+    <div id="page-rejestr" class="page">
+      <!-- FORMULARZ DODAWANIA OSOBY -->
+      <div class="card">
+        <form id="addForm" novalidate>
+          <label for="firstName">Imię</label>
+          <input id="firstName" name="firstName" type="text" required placeholder="Jan" />
+          <label for="lastName">Nazwisko</label>
+          <input id="lastName" name="lastName" type="text" required placeholder="Kowalski" />
+          <label for="address">Adres</label>
+          <input id="address" name="address" type="text" required placeholder="ul. Lubelska 2" />
+          <label for="gmina">Gmina</label>
+          <select id="gmina" name="gmina">
+            <option>Rejowiec Fabryczny</option>
+            <option>Miasto Rejowiec Fabryczny</option>
+            <option>Łopiennik</option>
+            <option>Krasnystaw</option>
+            <option>Siedliszcze</option>
+            <option>Rejowiec</option>
+          </select>
+          <label for="type">Rodzaj</label>
+          <select id="type" name="type">
+            <option value="Zbiornik bezodpływowy">Zbiornik bezodpływowy</option>
+            <option value="Przydomowa oczyszczalnia">Przydomowa oczyszczalnia</option>
+          </select>
+          <label class="checkbox">
+            <input id="aglomeracja" name="aglomeracja" type="checkbox" />
+            <span>Aglomeracja</span>
+          </label>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button class="btn-primary" id="submitBtn" type="submit">Dodaj osobę</button>
+            <button class="btn-secondary" id="resetForm" type="button">Wyczyść</button>
+            <button class="btn-secondary" id="cancelEdit" type="button" style="display:none">Anuluj</button>
+          </div>
+        </form>
+      </div>
+      <!-- PANEL BACKUP -->
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <button id="importBackup" class="btn-secondary">Importuj backup</button>
+          <button id="clearAll" class="btn-danger small">Usuń wszystko</button>
+          <input type="file" id="backupFileInput" accept=".txt" style="display:none" />
+          <div class="small" aria-hidden="true">Kopia zapasowa automatycznie co 5 rekordów.</div>
+        </div>
+      </div>
+      <!-- WYSZUKIWARKA -->
+      <div class="card search-box">
+        <label for="searchInput">Szukaj (imię, nazwisko, adres)</label>
+        <input type="text" id="searchInput" placeholder="Wpisz frazę..." />
+      </div>
+      <!-- KONTAINER GMIN -->
+      <div id="gminyContainer" class="gminy">
+      </div>
+    </div>
+    <!-- PODSTRONA 2: DODATKOWE FUNKCJE -->
+    <div id="page-dodatkowe" class="page">
+      <div class="card">
+        <h3>Przypisz litraż</h3>
+        <input type="text" id="addressSearch" style="width:50%; padding: 5px; margin-right: 10px" placeholder="Wpisz adres..." />
+        <button id="sortM3Btn" class="btn-secondary small" style="margin-bottom:8px">Sortuj</button>
+        <div class="address-list-container">
+          <div id="addressesList">
+          </div>
+          <div class="details-panel" style="margin-top:20px; padding:10px; border:1px solid #ccc; border-radius:6px;">
+          </div>
+        </div>
+        <br>
+        <button class="btn-secondary" onclick="printM3Table()">Drukuj</button>
+      </div>
+    </div>
+    <div id="page-historia" class="page">
+      <div class="card">
+        <h3>Historia zmian</h3>
+        <div class="card">
+          <input type="text" id="historySearch" placeholder="Szukaj w logach..." style="margin-bottom:10px; width:100%; padding:6px; border-radius:6px; border:1px solid #ccc;" />
+          <div id="historyList" class="history-content">
+          </div>
+        </div>
+        <button class="btn-danger small" style="margin-top:10px" onclick="clearHistory()">Wyczyść historię</button>
+      </div>
+    </div>
+  </div>
+  <script>
+  const menuButtons = document.querySelectorAll('.menuBtn');
+    const pages = document.querySelectorAll('.page');
+    
+    menuButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.page;
+        pages.forEach(p => p.classList.remove('active'));
+        menuButtons.forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + target).classList.add('active');
+        btn.classList.add('active');
+      });
+    });
+    
+    // domyślnie aktywna pierwsza strona
+    menuButtons[0].click();  
+    const STORAGE_KEY = 'rejestr_osoby_v2';
+    const $ = id => document.getElementById(id);
+    let data = [];
+    let editId = null;
+    let searchQuery = '';
+    let sortM3ZeroFirst = false;
+    let addressSearchQuery = '';
+  
+    
+    // --- UTILITY ---
+    function normalize(s) { return (s||'').toLowerCase().trim(); }
+    function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+    
+    // --- render z live search ---
+  function render() {
+    const container = $('gminyContainer');
+    container.innerHTML = '';
+  
+    const filtered = searchQuery
+      ? data.filter(p => {
+          const fullText = `${p.firstName} ${p.lastName} ${p.address} ${p.type} ${p.aglomeracja} ${p.gmina}`.toLowerCase();
+          return searchQuery.toLowerCase().split(/\s+/).every(q => fullText.includes(q));
+        })
+      : data;
+  
+    const grouped = groupByGmina(filtered);
+  
+    Object.keys(grouped).sort().forEach(g => {
+      const block = document.createElement('div');
+      block.className = 'card';
+  
+      const title = document.createElement('div');
+      title.className = 'gmina-title';
+      title.innerHTML = `
+        <div class="left">
+          <span>${highlight(g)}</span>
+          <span class="small">(${grouped[g].length})</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn-secondary small" data-download>Zapisz</button>
+          <span class="gmina-arrow">▶</span>
+        </div>
+      `;
+  
+      const content = document.createElement('div');
+      content.className = 'gmina-content';
+  
+      title.querySelector('[data-download]').onclick = ev => {
+        ev.stopPropagation();
+        saveAndPrintGminaFile(g, grouped[g]);
+      };
+      title.onclick = () => {
+        title.classList.toggle('open');
+        content.classList.toggle('open');
+      };
+  
+      grouped[g].forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'person';
+        row.innerHTML = `
+          <div class="left">
+            <strong>${highlight(`${p.firstName} ${p.lastName}`)}</strong>
+            <div class="meta">${highlight(`${p.address} — ${p.type} — ${p.aglomeracja}`)}</div>
+          </div>
+          <div class="actions">
+            <button class="btn-secondary small">Edytuj</button>
+            <button class="btn-danger small">Usuń</button>
+          </div>
+        `;
+  
+        row.querySelector('.btn-secondary').onclick = () => startEdit(p._id);
+        row.querySelector('.btn-danger').onclick = () => {
+          if (confirm(`Usunąć ${p.firstName} ${p.lastName}?`)) {
+            data = data.filter(x => x._id !== p._id);
+            saveData();
+            render();
+            addHistory({
+              action: 'DELETE',
+              firstName: p.firstName,
+              lastName: p.lastName,
+              address: p.address,
+              gmina: p.gmina
+            });
+            renderAddressList();
+            toast(`Usunięto ${p.firstName} ${p.lastName}`, 'success');
+          }
+        };
+  
+        content.appendChild(row);
+      });
+  
+      // automatyczne rozwijanie gminy jeśli dopasowania
+      if (searchQuery) {
+        const hasMatch = grouped[g].some(p => {
+          const fullText = `${p.firstName} ${p.lastName} ${p.address} ${p.type} ${p.aglomeracja} ${p.gmina}`.toLowerCase();
+          return searchQuery.toLowerCase().split(/\s+/).every(q => fullText.includes(q));
+        });
+        if (hasMatch) {
+          title.classList.add('open');
+          content.classList.add('open');
+        }
+      }
+  
+      block.appendChild(title);
+      block.appendChild(content);
+      container.appendChild(block);
+    });
+  }
+    
+    // --- LIVE SEARCH ---
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      render();
+    
+      $('searchInput').addEventListener('input', e => {
+        searchQuery = e.target.value.trim();
+        render();
+      });
+    });
+    
+    // --- LOAD / SAVE ---
+    function loadData() { try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { data = []; } }
+    function saveData() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {} }
+    
+    // --- TOAST ---
+    
+    function toast(msg, type='success', duration=4000) {
+      const container = document.getElementById('toasts');
+      if (!container) return;
+    
+      // Usuń poprzedni toast jeśli istnieje
+      const prev = container.querySelector('.toast');
+      if (prev) removeToast(prev);
+    
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `
+        <div class="icon">${type==='success'?'✓':type==='error'?'!':'i'}</div>
+        <div class="body">${msg}</div>
+        <button class="close">✕</button>
+      `;
+    
+      el.querySelector('.close').onclick = () => removeToast(el);
+    
+      container.appendChild(el);
+    
+      // Panel opada w dół
+      document.body.classList.add('toast-active');
+    
+      // Animacja wejścia restart
+      el.style.animation = 'none';
+      requestAnimationFrame(() => { el.style.animation = ''; });
+    
+      // Automatyczne usunięcie po czasie
+      setTimeout(() => {
+        removeToast(el);
+        document.body.classList.remove('toast-active'); // panel wraca
+      }, duration);
+    }
+    
+    const M3_KEY = 'rejestr_m3';
+    
+  function renderAddressList() {
+    const container = document.querySelector('.address-list-container');
+    const detailsPanel = document.querySelector('.details-panel');
+    container.innerHTML = '';
+   // detailsPanel.innerHTML = ''; // czyść panel szczegółów
+  
+    loadData(); // wczytaj aktualne dane z localStorage
+  
+    // grupowanie po adresie
+    const grouped = {};
+    data.forEach(p => {
+      if (!grouped[p.address]) grouped[p.address] = [];
+      grouped[p.address].push(p);
+    });
+  
+    let addresses = Object.keys(grouped);
+  
+  // filtr po wyszukiwaniu
+  if(addressSearchQuery) {
+    addresses = addresses.filter(addr => addr.toLowerCase().includes(addressSearchQuery));
+  }
+  
+  
+  	addresses.sort((a, b) => {
+    const m3a = grouped[a][0].m3 || 0;
+    const m3b = grouped[b][0].m3 || 0;
+  
+    if (sortM3ZeroFirst) {
+      if (m3a === 0 && m3b !== 0) return -1;
+      if (m3a !== 0 && m3b === 0) return 1;
+    }
+  
+    return a.localeCompare(b, 'pl');
+  });
+  
+  
+    if (addresses.length === 0) {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.textContent = 'Brak danych do wyświetlenia :(';
+      emptyMsg.style.textAlign = 'center';
+      emptyMsg.style.color = '#555';
+      emptyMsg.style.fontSize = '18px';
+      emptyMsg.style.fontWeight = 'bold';
+      emptyMsg.style.marginTop = '0px';
+      container.appendChild(emptyMsg);
+      return;
+    }
+  
+    addresses.forEach(address => {
+  	const item = document.createElement('div');
+  	item.className = 'address-item';
+  
+  	const currentM3 = grouped[address][0].m3 || 0;
+  		if (currentM3 === 0) {
+  			item.classList.add('m3-zero');
+  		}
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
+      item.style.gap = '10px';
+      item.style.marginBottom = '6px';
+  
+      const label = document.createElement('div');
+      label.textContent = address;
+      label.style.flex = '1';
+  
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = 0;
+      input.max = 999;
+      input.placeholder = 'm³';
+      input.value = grouped[address][0].m3 || 0;
+  
+  
+  
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = 'Zapisz';
+      saveBtn.className = 'btn-primary small';
+      saveBtn.onclick = () => {
+        const val = parseFloat(input.value) || 0;
+        const oldM3 = grouped[address][0].m3 || 0;
+        if (oldM3 === val) {
+          toast('Wartość m³ nie uległa zmianie', 'error');
+          return;
+        }
+  
+        data.forEach(p => {
+          if (p.address === address) p.m3 = val;
+        });
+  
+        addHistory({
+          action: 'M3',
+          firstName: grouped[address][0].firstName,
+          lastName: grouped[address][0].lastName,
+          address: grouped[address][0].address,
+          gmina: grouped[address][0].gmina,
+          field: 'm3',
+          oldValue: oldM3,
+          newValue: val
+        });
+  
+        saveData();
+        toast(`Zmiana została zapisana`, 'success');
+  	  renderAddressList();
+      };
+  
+      const detailsBtn = document.createElement('button');
+      detailsBtn.textContent = 'Szczegóły';
+      detailsBtn.className = 'btn-secondary small';
+      detailsBtn.onclick = () => {
+        // Tworzymy treść do toast
+        const details = grouped[address]
+          .map(p => `${p.firstName} ${p.lastName} —  ${p.address} —  ${p.gmina} —  ${p.type} —  Aglomeracja: ${p.aglomeracja}`)
+          .join('<br>');
+  
+        toast(details, 'success', 6000); // 6 sekund, typ 'info'
+      };
+  
+      item.append(label, input, saveBtn, detailsBtn);
+      container.appendChild(item);
+    });
+  }
+  document.getElementById('addressSearch').addEventListener('input', e => {
+    addressSearchQuery = e.target.value.trim().toLowerCase();
+    renderAddressList(); // odśwież listę przy każdym wpisaniu
+  });
+  
+  
+    
+    
+    // render przy starcie
+    document.addEventListener('DOMContentLoaded', renderAddressList);
+    
+    document.getElementById('sortM3Btn').addEventListener('click', () => {
+    sortM3ZeroFirst = !sortM3ZeroFirst;
+    document.getElementById('sortM3Btn').textContent =
+      sortM3ZeroFirst
+        ? 'Sortuj alfabetycznie'
+        : 'Sortuj nieprzypisane';
+  
+    renderAddressList();
+  });
+  
+    function removeToast(el) {
+      if (!el || el.classList.contains('hide')) return;
+      el.classList.add('hide');
+      el.addEventListener('animationend', () => {
+        if (el.parentNode) el.remove();
+      });
+    }
+    
+    // --- STATYSTYKI ---
+    const addressesList = $('addressesList');
+    const m3Total = $('m3Total');
+    
+    function renderAddresses() {
+      addressesList.innerHTML = '';
+      // unikalne adresy
+      const uniqueAddresses = [...new Map(data.map(p => [p.address, p])).values()];
+      
+      uniqueAddresses.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'person';
+        div.innerHTML = `
+          <div class="left">${p.address}</div>
+          <input type="number" min="0" step="0.01" placeholder="m³" value="${p.m3 || ''}" style="width:80px;padding:4px;border-radius:6px;border:1px solid #ccc;" />
+        `;
+        const input = div.querySelector('input');
+        input.oninput = () => { p.m3 = parseFloat(input.value) || 0; };
+        addressesList.appendChild(div);
+      });
+    }
+    
+    
+    
+    
+    // --- render po wejściu w statystyki ---
+    document.querySelectorAll('.menu button[data-page="statystyki"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        renderAddresses();
+      });
+    });
+    
+    
+  function printM3Table() {
+    const missing = data.filter(p => !p.m3 || p.m3 <= 0);
+    if (missing.length > 0) {
+      toast('Nie można drukować – nie wszystkie adresy mają przypisane m³!', 'error');
+      return; // zatrzymujemy drukowanie
+    }
+  
+    // --- Pokaz loader ---
+    const loader = document.createElement('div');
+    loader.id = 'printLoaderM3';
+    loader.style.position = 'fixed';
+    loader.style.top = 0;
+    loader.style.left = 0;
+    loader.style.width = '100%';
+    loader.style.height = '100%';
+    loader.style.background = 'rgba(255,255,255,0.95)';
+    loader.style.display = 'flex';
+    loader.style.flexDirection = 'column';
+    loader.style.alignItems = 'center';
+    loader.style.justifyContent = 'center';
+    loader.style.zIndex = 99999;
+    loader.innerHTML = `
+      <div class="spinner" style="border:6px solid #f3f3f3;border-top:6px solid #2563eb;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin-bottom:12px;"></div>
+      <div style="font-size:1.1rem;color:#111;font-weight:500;">Generuję dokument do druku...</div>
+    `;
+    document.body.appendChild(loader);
+  
+    // Keyframes dla spinnera jeśli jeszcze nie ma
+    if (!document.getElementById('spinnerKeyframes')) {
+      const style = document.createElement('style');
+      style.id = 'spinnerKeyframes';
+      style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+      document.head.appendChild(style);
+    }
+  
+    // --- Sortowanie i tworzenie HTML ---
+    const list = data
+      .filter(p => p.m3 && p.m3 > 0)
+      .sort((a,b) => a.address.localeCompare(b.address,'pl'));
+  
+    const styleHTML = `
+      <style>
+        @page { margin: 15mm }
+        body { font-family: Arial; padding: 10px; }
+        h1 { text-align: center; margin-bottom: 20px; }
+        table { width:100%; border-collapse: collapse; font-size:14px; margin-top: 20px; }
+        th, td { border:1px solid #ccc; padding:6px; text-align:left; }
+        th { background:#2563eb; color:white; }
+        tr:nth-child(even) { background:#f2f2f2; }
+      </style>
+    `;
+  
+    let html = `<html><head>${styleHTML}</head><body>
+      <h1>Zestawienie ilości</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>LP</th>
+            <th>Nazwa Gminy</th>
+            <th>Adres</th>
+            <th>Litraż m³</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+  
+    list.forEach((p,i) => {
+      html += `
+        <tr>
+          <td>${i+1}</td>
+          <td>${p.gmina}</td>
+          <td>${p.address}</td>
+          <td>${p.m3}</td>
+        </tr>`;
+    });
+  
+    html += '</tbody></table></body></html>';
+  
+    // --- Otwarcie okna i drukowanie ---
+    setTimeout(() => {
+      const win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+  
+      // Ukryj loader i wywołaj print
+      loader.remove();
+      win.print();
+    }, 1500); // krótki delay dla płynności animacji
+  }
+  
+    
+    // --- ADD / EDIT PERSON ---
+    function addPerson(p) {
+      if(data.some(x=>normalize(x.firstName)===normalize(p.firstName)&&normalize(x.lastName)===normalize(p.lastName))){ toast('Taka osoba już istnieje!','warning'); return; }
+      p._id = crypto.randomUUID(); data.push(p); saveData(); render(); toast(`Dodano ${p.firstName} ${p.lastName}`,'success'); autoBackup();renderAddressList();
+  	addHistory({
+  	action: 'ADD',
+  	firstName: p.firstName,
+  	lastName: p.lastName,
+  	address: p.address,
+  	gmina: p.gmina
+  });
+    }
+    
+    function startEdit(id) {
+      const p=data.find(x=>x._id===id); if(!p) return;
+      editId=id; $('firstName').value=p.firstName; $('lastName').value=p.lastName; $('address').value=p.address; $('gmina').value=p.gmina;
+      $('type').value=p.type; $('aglomeracja').checked=p.aglomeracja==='TAK'; $('submitBtn').textContent='Zapisz zmiany';
+      $('cancelEdit').style.display='inline-block'; window.scrollTo({top:0,behavior:'smooth'});
+    }
+    
+    function resetEdit() { editId=null; $('addForm').reset(); $('submitBtn').textContent='Dodaj osobę'; $('cancelEdit').style.display='none'; render(); }
+    
+    // --- GROUP BY GMINA ---
+    function groupByGmina(list){ const map={}; list.forEach(p=>{ if(!map[p.gmina]) map[p.gmina]=[]; map[p.gmina].push(p); }); return map; }
+    
+    
+    // --- AUTOBACKUP ---
+    
+    function autoBackup() {
+      if (data.length % 5 !== 0) return; // backup co 5 zmian
+    
+      let txt = 'BACKUP\n\n';
+      data.forEach(p => {
+        txt += `${p.firstName};${p.lastName};${p.address};${p.type};${p.aglomeracja};${p.gmina}\n`;
+      });
+    
+      const blob = new Blob(['\ufeff' + txt], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+    
+      // timestamp w formacie YYYY-MM-DD_HH-MM-SS
+      const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      a.download = `BACKUP_${timestamp}.txt`;
+    
+      a.click();
+    }
+    
+    
+    // --- IMPORT ---
+  function importFromText(text) {
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const parsed = [];
+    const total = lines.length;
+    let count = 0;
+  
+    // --- Stwórz loader ze spinnerem ---
+    let loader = document.getElementById('loader');
+    if (!loader) {
+      loader = document.createElement('div');
+      loader.id = 'loader';
+      loader.style = `
+        position: fixed;
+        top:0; left:0; width:100%; height:100%;
+        background: rgba(255,255,255,0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: #111;
+        z-index: 99999;
+      `;
+      loader.innerHTML = `
+        <div class="spinner" style="
+          border:6px solid #f3f3f3;
+          border-top:6px solid #2563eb;
+          border-radius:50%;
+          width:50px;
+          height:50px;
+          animation:spin 1s linear infinite;
+          margin-bottom:12px;"></div>
+        <div id="loaderText">Importowanie 0/${total} rekordów...</div>
+      `;
+      document.body.appendChild(loader);
+  
+      // Keyframes dla spinnera jeśli jeszcze nie ma
+      if (!document.getElementById('spinnerKeyframes')) {
+        const style = document.createElement('style');
+        style.id = 'spinnerKeyframes';
+        style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+        document.head.appendChild(style);
+      }
+    } else {
+      document.getElementById('loaderText').textContent = `Importowanie 0/${total} rekordów...`;
+      loader.style.display = 'flex';
+    }
+  
+    // --- Funkcja przetwarzająca linię po linii ---
+    function processNext() {
+      if (lines.length === 0) {
+        loader.style.display = 'none'; // ukryj loader
+        if (parsed.length) {
+          data = parsed;
+          saveData();
+          render();
+          renderAddressList();
+          toast(`Zaimportowano ${parsed.length} rekordów`, 'success');
+        } else {
+          toast('Brak poprawnych danych', 'warning');
+        }
+        return;
+      }
+  
+      const line = lines.shift();
+      if (!line.startsWith('BACKUP')) {
+        const parts = line.split(';');
+        if (parts.length >= 6) {
+          parsed.push({
+            _id: crypto.randomUUID(),
+            firstName: parts[0],
+            lastName: parts[1],
+            address: parts[2],
+            type: parts[3],
+            aglomeracja: parts[4],
+            gmina: parts[5]
+          });
+        }
+      }
+  
+      count++;
+      document.getElementById('loaderText').textContent = `Importowanie ${count}/${total} rekordów...`;
+  
+      setTimeout(processNext, 20); // krótki delay, żeby spinner był widoczny
+    }
+  
+    processNext();
+  }
+  
+    
+    
+    
+    // --- PRINT SINGLE GMINA ---
+  function saveAndPrintGminaFile(gmina, list) {
+    // --- Dodaj loader ---
+    const loader = document.createElement('div');
+    loader.id = 'printLoader';
+    loader.style.position = 'fixed';
+    loader.style.top = 0;
+    loader.style.left = 0;
+    loader.style.width = '100%';
+    loader.style.height = '100%';
+    loader.style.background = 'rgba(255,255,255,0.95)';
+    loader.style.display = 'flex';
+    loader.style.flexDirection = 'column';
+    loader.style.alignItems = 'center';
+    loader.style.justifyContent = 'center';
+    loader.style.zIndex = 99999;
+    loader.innerHTML = `
+      <div class="spinner" style="border:6px solid #f3f3f3;border-top:6px solid #2563eb;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin-bottom:12px;"></div>
+      <div style="font-size:1.1rem;color:#111;font-weight:500;">Generuję dokument do druku...</div>
+    `;
+    document.body.appendChild(loader);
+  
+    // animacja spinnera (jeśli jeszcze nie ma)
+    if (!document.getElementById('spinnerKeyframes')) {
+      const style = document.createElement('style');
+      style.id = 'spinnerKeyframes';
+      style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+      document.head.appendChild(style);
+    }
+  
+    // --- Zapis w historii ---
+    addHistory({
+      action: 'PRINT',
+      firstName: gmina
+    });
+  
+    // --- Sortowanie ---
+    list = [...list].sort((a,b) => a.lastName.localeCompare(b.lastName,'pl',{sensitivity:'base'}));
+  
+    const styleHTML = `<style>
+      @page{margin:15mm}
+      body{font-family:Arial;padding:10px;color:#111}
+      h1{text-align:center;margin-bottom:20px;font-size:22px}
+      table{width:100%;border-collapse:collapse;font-size:14px}
+      th,td{border:1px solid #ccc;padding:6px;text-align:left}
+      th{background:#2563eb;color:white}
+      tr:nth-child(even){background:#f2f2f2}
+    </style>`;
+  
+    let html = `<html><head>${styleHTML}</head><body><h1>Gmina: ${gmina}</h1><table><thead><tr>
+      <th>LP</th><th>Imię</th><th>Nazwisko</th><th>Adres</th><th>Rodzaj</th><th>Aglomeracja</th>
+    </tr></thead><tbody>`;
+  
+    list.forEach((p,i) => {
+      html += `<tr><td>${i+1}</td><td>${p.firstName}</td><td>${p.lastName}</td>
+               <td>${p.address}</td><td>${p.type}</td><td>${p.aglomeracja}</td></tr>`;
+    });
+    html += '</tbody></table></body></html>';
+  
+    // --- Utwórz okno i drukuj ---
+    setTimeout(() => {
+      const win = window.open("", "_blank");
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+  
+      // Usuń loader po krótkim czasie
+      setTimeout(() => {
+        loader.remove();
+        win.focus();
+        win.print();
+      }, 1500);
+    }, 1800); // krótszy czas niż 4500ms – loader widać, ale strona szybciej reaguje
+  }
+  
+    
+    // --- DOM EVENTS ---
+    document.addEventListener('DOMContentLoaded',()=>{
+      loadData(); render();
+    
+      $('addForm').addEventListener('submit',e=>{
+        e.preventDefault();
+        const p={firstName:$('firstName').value.trim(),lastName:$('lastName').value.trim(),address:$('address').value.trim(),type:$('type').value,aglomeracja:$('aglomeracja').checked?'TAK':'NIE',gmina:$('gmina').value};
+        if(!p.firstName||!p.lastName||!p.address){ toast('Uzupełnij wszystkie pola','warning'); return; }
+        if(editId){
+    const idx = data.findIndex(x => x._id === editId);
+    const old = { ...data[idx] };
+  
+    data[idx] = { ...data[idx], ...p };
+    saveData();
+  
+    // --- wykrywanie zmian ---
+    const changes = [];
+    Object.keys(p).forEach(key => {
+      if (old[key] !== p[key]) {
+        changes.push({
+          field: key,
+          before: old[key],
+          after: p[key]
+        });
+      }
+    });
+  
+    if (changes.length) {
+  	addHistory({
+  	action: 'EDIT',
+    firstName: p.firstName,
+    lastName: p.lastName,
+    address: p.address,
+    gmina: p.gmina,
+    changes
+  });
+    }
+  
+    renderAddressList();
+    toast('Zapisano zmiany','success');
+    resetEdit();
+  }
+        else{ addPerson(p); $('addForm').reset(); }
+      });
+    
+      $('resetForm').onclick=()=>$('addForm').reset();
+      $('cancelEdit').onclick=resetEdit;
+      $('clearAll').onclick=()=>{ if(confirm('Usunąć wszystkie dane?')){ localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(M3_KEY); data=[]; render();  renderAddressList(); toast('Wszystkie dane usunięte','success');
+  	          addHistory({
+              action: 'BACKUPDELETE',
+              firstName: 'Użytkownik:',
+              lastName: 'Administrator',
+              address: '',
+              gmina: ''
+            });
+  	} };
+      $('importBackup').onclick=()=>$('backupFileInput').click();
+      $('backupFileInput').addEventListener('change',ev=>{ const file=ev.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>importFromText(e.target.result); reader.readAsText(file,'utf-8'); });
+    
+      // --- LIVE SEARCH ---
+      $('searchInput').addEventListener('input', e => {
+        searchQuery = e.target.value.trim();
+        render();
+      });
+    });
+    
+    // --- DOM EVENTS dla menu ---
+    menuButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.page;
+    
+        // przełączanie aktywnych stron
+        pages.forEach(p => p.classList.remove('active'));
+        menuButtons.forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + target).classList.add('active');
+        btn.classList.add('active');
+    
+        // jeśli wchodzimy w statystyki / adresy m³ -> odśwież listę
+        if (target === 'statystyki') {
+          renderAddresses();       // dla tabeli w statystykach
+          renderAddressList();     // dla listy adresów z inputami m³
+        }
+  	  if (target === 'historia') {
+  		renderHistory();
+  		}
+      });
+    });
+    
+    const HISTORY_KEY = 'rejestr_historia_v1';
+    function addHistory(entry) {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  
+    history.unshift({
+      id: crypto.randomUUID(),
+      time: new Date().toLocaleString('pl-PL'),
+      ...entry
+    });
+  
+    // limit – ostatnie 1000 zmian
+    localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify(history.slice(0, 1000))
+    );
+  }
+  let historySearchQuery = '';
+  
+  function escapeHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+  
+  function highlight(text) {
+    if (!searchQuery || !text) return text;
+  
+    // rozdziel zapytanie na pojedyncze słowa, ignorując spacje
+    const words = searchQuery
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+  
+    // dla każdego słowa zbuduj regex i podmień w tekście
+    let highlighted = text;
+    words.forEach(word => {
+      const regex = new RegExp(`(${escapeRegExp(word)})`, 'gi');
+      highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+    });
+  
+    return highlighted;
+  }
+  
+  // potrzebne do prawidłowego escapowania znaków specjalnych w regex
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  
+  
+  function renderHistory() {
+    const container = document.getElementById('historyList');
+    if (!container) return;
+  
+    let historia = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    container.innerHTML = '';
+  
+    if (!historia.length) {
+      container.innerHTML = '<div class="small">Brak zapisanych zmian :(</div>';
+      return;
+    }
+  
+    // jeśli istnieje query, rozbij na słowa
+    let filtered = historia;
+    const queries = historySearchQuery ? historySearchQuery.toLowerCase().trim().split(/\s+/) : [];
+  
+    if (queries.length) {
+      filtered = historia.filter(h => {
+        return queries.every(q =>
+          (h.firstName || '').toLowerCase().includes(q) ||
+          (h.lastName || '').toLowerCase().includes(q) ||
+          (h.address || '').toLowerCase().includes(q) ||
+          (h.gmina || '').toLowerCase().includes(q) ||
+          (h.action || '').toLowerCase().includes(q) ||
+          (h.changes ? h.changes.some(c =>
+            (c.before || '').toLowerCase().includes(q) ||
+            (c.after || '').toLowerCase().includes(q)
+          ) : false)
+        );
+      });
+    }
+  
+    if (!filtered.length) {
+      container.innerHTML = '<div class="small" style="text-align:center">Brak wyników dla tego wyszukiwania</div>';
+      return;
+    }
+  
+    // funkcja podświetlania wielu słów
+    function highlightMulti(text) {
+      if (!queries.length) return text;
+      let escapedText = text;
+      queries.forEach(q => {
+        if (!q) return;
+        const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        escapedText = escapedText.replace(regex, '<mark>$1</mark>');
+      });
+      return escapedText;
+    }
+  
+    filtered.forEach(h => {
+      const div = document.createElement('div');
+      div.className = 'person';
+  
+      let opis = '';
+      if (h.action === 'ADD') opis = '➕ Dodano osobę';
+      else if (h.action === 'DELETE') opis = '🗑️ Usunięto osobę';
+  	else if (h.action === 'BACKUPDELETE') opis = '❌️ Usunięto kopię zapasową';
+  	else if (h.action === 'PRINT') opis = '✅ Wydrukowano zestawienie gminy';
+      else if (h.action === 'M3') opis = `💧 Zmiana : ${h.oldValue}m³ → ${h.newValue}m³`;
+      else if (h.action === 'EDIT') {
+        if (h.changes && h.changes.length) {
+          const changesText = h.changes.map(c => {
+            let nazwaPola = c.field;
+            if (c.field === 'firstName') nazwaPola = 'Imię';
+            else if (c.field === 'lastName') nazwaPola = 'Nazwisko';
+            else if (c.field === 'address') nazwaPola = 'Adres';
+            else if (c.field === 'gmina') nazwaPola = 'Gmina';
+            else if (c.field === 'type') nazwaPola = 'Rodzaj';
+            else if (c.field === 'm3') nazwaPola = 'm³';
+            return `${nazwaPola}: "${c.before}" → "${c.after}"`;
+          }).join('<br>');
+          opis = `✏️ Edytowano dane:<br>${changesText}`;
+        } else {
+          opis = '✏️ Edytowano dane';
+        }
+      }
+  
+      div.innerHTML = `
+        <div class="left">
+          <strong>${highlightMulti(opis)}</strong>
+          <div class="meta">
+            ${highlightMulti(h.firstName || '')} ${highlightMulti(h.lastName || '')}
+            ${h.address ? '– ' + highlightMulti(h.address) : ''}
+            ${h.gmina ? ' (' + highlightMulti(h.gmina) + ')' : ''}
+          </div>
+        </div>
+        <div class="small">${h.time || ''}</div>
+      `;
+      container.appendChild(div);
+    });
+  }
+  
+  
+  
+  // event wyszukiwania
+  document.getElementById('historySearch').addEventListener('input', e => {
+    historySearchQuery = e.target.value.trim();
+    renderHistory();
+  });
+  
+  // render na start
+  document.addEventListener('DOMContentLoaded', renderHistory);
+  
+  
+  
+  function clearHistory() {
+    if (!confirm('Czy na pewno wyczyścić historię zmian?')) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+    toast('Historia została wyczyszczona', 'success');
+  }
+  
+  window.addEventListener('load', () => {
+    // Poczekaj aż wszystkie dane się wczytają i render zakończy
+    setTimeout(() => {
+      const loader = document.getElementById('loadingScreen');
+      if(loader) loader.classList.add('hide');
+    }, 3000); // 500ms dla płynnego przejścia, można dopasować
+  });
+  </script>
+</body>
+</html>
