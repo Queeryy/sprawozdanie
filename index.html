@@ -1577,7 +1577,7 @@ function exportToText() {
     document.getElementById('loaderText').textContent =
       `Eksportowanie ${count}/${total} rekordów...`;
 
-    setTimeout(processNextExport, 500); // identyczny delay jak import
+    setTimeout(processNextExport, 50); // identyczny delay jak import
   }
 
   processNextExport();
