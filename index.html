@@ -1255,6 +1255,7 @@
       });
     
       $('resetForm').onclick=()=>$('addForm').reset();
+      $('exportBackup').onclick = exportBackupAll;
       $('cancelEdit').onclick=resetEdit;
       $('clearAll').onclick=()=>{ if(confirm('Usunąć wszystkie dane?')){ localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(M3_KEY); data=[]; render();  renderAddressList(); toast('Wszystkie dane usunięte','success');
   	          addHistory({
@@ -1464,6 +1465,34 @@
       if(loader) loader.classList.add('hide');
     }, 3000); // 500ms dla płynnego przejścia, można dopasować
   });
+    function exportBackupAll() {
+  const backup = {
+    meta: {
+      app: 'Sprawozdanie',
+      version: 1,
+      createdAt: new Date().toISOString()
+    },
+    data: JSON.parse(localStorage.getItem(STORAGE_KEY)) || [],
+    history: JSON.parse(localStorage.getItem(HISTORY_KEY)) || []
+  };
+
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+
+  const timestamp = new Date()
+    .toISOString()
+    .slice(0, 19)
+    .replace(/[:T]/g, '-');
+
+  a.download = `BACKUP_FULL_${timestamp}.json`;
+  a.click();
+
+  toast('Backup został wyeksportowany', 'success');
+}
+
   </script>
 </body>
 </html>
