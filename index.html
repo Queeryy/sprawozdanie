@@ -438,10 +438,51 @@
   
   /* Firefox */
   .history-content { scrollbar-width: thin; scrollbar-color: #2563eb #f1f1f1; }
+  .modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  max-width:320px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-actions{
+  margin-top:15px;
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
+footer {
+text-align: center;
+}
   </style>
 </head>
 
 <body>
+<div id="confirmModal" class="modal">
+  <div class="modal-box">
+    <p id="confirmText"></p>
+    <div class="modal-actions">
+      <button id="confirmYes" class="btn-primary">Tak</button>
+      <button id="confirmNo" class="btn-secondary">Anuluj</button>
+    </div>
+  </div>
+</div>
   <div id="loadingScreen">
     <div class="spinner">
     </div>
@@ -540,6 +581,7 @@
       </div>
     </div>
   </div>
+  <footer>version 1.1 All rights reserved</footer>
   <script>
   const menuButtons = document.querySelectorAll('.menuBtn');
     const pages = document.querySelectorAll('.page');
@@ -992,19 +1034,79 @@
     }, 1500); // krótki delay dla płynności animacji
   }
   
-    
+  function checkDuplicates(p){
+
+  const samePerson = data.filter(x =>
+    normalize(x.firstName) === normalize(p.firstName) &&
+    normalize(x.lastName) === normalize(p.lastName)
+  );
+
+  const sameAddress = data.filter(x =>
+    normalize(x.address) === normalize(p.address)
+  );
+
+  const exact = data.filter(x =>
+    normalize(x.firstName) === normalize(p.firstName) &&
+    normalize(x.lastName) === normalize(p.lastName) &&
+    normalize(x.address) === normalize(p.address)
+  );
+
+  return {
+    samePerson,
+    sameAddress,
+    exact
+  };
+
+}
+
+
+function addPerson(p){
+
+  const dup = checkDuplicates(p);
+
+  let message = '';
+
+  if(dup.exact.length){
+    message = `Istnieje już IDENTYCZNY rekord tej osoby.\nCzy chcesz dodać kolejny?`;
+  }
+  else if(dup.samePerson.length){
+    message = `Istnieje już ${dup.samePerson.length} rekord tej osoby (${p.firstName} ${p.lastName}).\nCzy na pewno chcesz dodać kolejny?`;
+  }
+  else if(dup.sameAddress.length){
+    message = `Pod adresem "${p.address}" istnieje już ${dup.sameAddress.length} osób.\nCzy chcesz dodać kolejną?`;
+  }
+
+  if(message){
+    showConfirm(message, () => addPersonToList(p));
+    return;
+  }
+
+  addPersonToList(p);
+}
     // --- ADD / EDIT PERSON ---
-    function addPerson(p) {
-      if(data.some(x=>normalize(x.firstName)===normalize(p.firstName)&&normalize(x.lastName)===normalize(p.lastName))){ toast('Taka osoba już istnieje!','warning'); return; }
-      p._id = crypto.randomUUID(); data.push(p); saveData(); render(); toast(`Dodano ${p.firstName} ${p.lastName}`,'success'); autoBackup();renderAddressList();
-  	addHistory({
-  	action: 'ADD',
-  	firstName: p.firstName,
-  	lastName: p.lastName,
-  	address: p.address,
-  	gmina: p.gmina
+function addPersonToList(p){
+
+  p._id = crypto.randomUUID();
+
+  data.push(p);
+
+  saveData();
+  render();
+  renderAddressList();
+
+  toast(`Dodano ${p.firstName} ${p.lastName}`, 'success');
+
+  autoBackup();
+
+  addHistory({
+    action: 'ADD',
+    firstName: p.firstName,
+    lastName: p.lastName,
+    address: p.address,
+    gmina: p.gmina
   });
-    }
+
+}
     
     function startEdit(id) {
       const p=data.find(x=>x._id===id); if(!p) return;
@@ -1582,6 +1684,27 @@ function exportToText() {
   processNextExport();
 }
 
+function showConfirm(message, onYes){
+
+  const modal = document.getElementById('confirmModal');
+  const text = document.getElementById('confirmText');
+  const yes = document.getElementById('confirmYes');
+  const no = document.getElementById('confirmNo');
+
+  text.textContent = message;
+
+  modal.classList.add('show');
+
+  yes.onclick = () => {
+    modal.classList.remove('show');
+    onYes();
+  };
+
+  no.onclick = () => {
+    modal.classList.remove('show');
+  };
+
+}
 
   </script>
 </body>
